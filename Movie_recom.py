@@ -3,8 +3,6 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer  # To vectorize the movie names
 import re  # To clean text
 from sklearn.metrics.pairwise import cosine_similarity  # To calculate similarity
-from ipywidgets import widgets  # To create interactive interface
-from IPython.display import display  # To create interactive interface
 import streamlit as st
 pd.set_option('display.width', 1000)
 
