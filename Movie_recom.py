@@ -19,9 +19,14 @@ with header:
 
 url = 'https://www.dropbox.com/s/slh5e7qzhqnjqqw/ratings.csv?dl=1'
 url1 = 'https://www.dropbox.com/s/hjmdh3yrdck4gsd/movies.csv?dl=1'
+
 @st.cache
-movies_data = pd.read_csv(url1)
-movies_data.head(3)
+def load1(x):
+    movies_data = pd.read_csv(x)
+    return movies_data.head(3)
+
+
+movies_data = load1(url1)
 
 def clean_title(x):  # Create a function
     return re.sub('[^\w ]', '', x)  # This code removes anything except numbers,letters and blanks
@@ -47,8 +52,11 @@ def search(query):
     return movies
 
 @st.cache
-ratings = pd.read_csv(url)
-ratings.head(3)
+def load(url):
+    ratings = pd.read_csv(url)
+    return ratings.head(3)
+
+ratings = load(url)
 
 
 @st.cache
