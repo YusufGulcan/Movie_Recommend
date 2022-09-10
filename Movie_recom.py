@@ -4,8 +4,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer  # To vectorize the 
 import re  # To clean text
 from sklearn.metrics.pairwise import cosine_similarity  # To calculate similarity
 import streamlit as st
+from zipfile import ZipFile
+import os
 pd.set_option('display.width', 1000)
 
+#
 header = st.container()
 dataset = st.container()
 features = st.container()
@@ -15,26 +18,41 @@ with header:
     st.text(
         'You Don\'t Know What To Watch ? \nI Can Help You.')
 
-url = 'https://www.dropbox.com/s/slh5e7qzhqnjqqw/ratings.csv?dl=1'
-url1 = 'https://www.dropbox.com/s/hjmdh3yrdck4gsd/movies.csv?dl=1'
+path = 'data.zip'
 
-@st.cache
+# path = r"C:\Users\yusuf\GitHub\Movie_Recommend\data.zip"
+
+
+
+@st.cache(allow_output_mutation=True)
+def extractation(x):
+    zip_data = ZipFile(x)
+    et = {}
+    with zip_data:
+        for idx, file in enumerate(zip_data.namelist()):
+            et['data_' + str(idx)] = zip_data.extract(file)
+    return et
+
+paths = extractation(path)
+#
+@st.cache(allow_output_mutation=True)
 def load1(x):
-    movies_data = pd.read_csv(x)
-    return movies_data.head(3)
+    movies_data = pd.read_parquet(x)
+    return movies_data
 
+# print(load1(et['data_0']))
+#
 
-movies_data = load1(url1)
+# movies_data = pd.read_parquet(et['data_0'])
+movies_data = load1(paths['data_0'])
 
 def clean_title(x):  # Create a function
     return re.sub('[^\w ]', '', x)  # This code removes anything except numbers,letters and blanks
 
 
-movies_data['clean_title'] = movies_data.title.apply(
-    lambda x: clean_title(x.strip()))  # Use the function to clean the title text in each row.
+movies_data['clean_title'] = movies_data.title.apply(lambda x: clean_title(x.strip()))  # Use the function to clean the title text in each row.
 
-vec = TfidfVectorizer(ngram_range=(
-1, 2))  # Vectorizer converts the test into numpy
+vec = TfidfVectorizer(ngram_range=(1, 2))  # Vectorizer converts the test into numpy
 # arrays, it takes single words and word pairs into consideration
 vec_data = vec.fit_transform(movies_data.clean_title)  # Transform the cleaned text column
 
@@ -43,18 +61,17 @@ def search(query):
     query = clean_title(query)  # Clean the variable passed in the function
     query = vec.transform([query])  # Vectorize the variable   **  Only transform **
     similarity = cosine_similarity(query, vec_data).flatten()  # Calculate the  similarity score
-    locs = np.append(np.argpartition(similarity, -10)[-10:],
-                     np.argmax(similarity))  # Find 10 indices with the highest score
-    movies = movies_data.iloc[locs][
-             ::-1].drop_duplicates()  # Pass the indices in the movie data frame and create a new data frame.
+    locs = np.append(np.argpartition(similarity,-10)[-10:],np.argmax(similarity))
+    # locs = np.argsort(similarity)[-10:]  # Find 10 indices with the highest score
+    movies = movies_data.iloc[locs][::-1].drop_duplicates()  # Pass the indices in the movie data frame and create a new data frame.
     return movies
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def load(url):
-    ratings = pd.read_csv(url)
-    return ratings.head(3)
+    ratings = pd.read_parquet(url)
+    return ratings.iloc[:,1:]
 
-ratings = load(url)
+ratings = load(paths['data_1'])
 
 
 @st.cache
