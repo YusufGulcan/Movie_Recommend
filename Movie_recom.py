@@ -38,6 +38,7 @@ paths = extractation(path)
 @st.cache(allow_output_mutation=True)
 def load1(x):
     movies_data = pd.read_parquet(x)
+    movies_data = movies_data[~movies_data.genres.str.contains('\(')]
     return movies_data
 
 # print(load1(et['data_0']))
@@ -61,8 +62,8 @@ def search(query):
     query = clean_title(query)  # Clean the variable passed in the function
     query = vec.transform([query])  # Vectorize the variable   **  Only transform **
     similarity = cosine_similarity(query, vec_data).flatten()  # Calculate the  similarity score
-    locs = np.append(np.argpartition(similarity,-10)[-10:],np.argmax(similarity))
-    # locs = np.argsort(similarity)[-10:]  # Find 10 indices with the highest score
+    # locs = np.append(np.argpartition(similarity,-10)[-10:],np.argmax(similarity))
+    locs = np.argsort(similarity)[-10:]  # Find 10 indices with the highest score
     movies = movies_data.iloc[locs][::-1].drop_duplicates()  # Pass the indices in the movie data frame and create a new data frame.
     return movies
 
@@ -102,11 +103,17 @@ def recommendation(movie_id):
     # because recommendation, in its nature,
     # is valuable when the asker do not know about the movie. So we take the raio between the score
     # among the similar people and the total population; the score is amplified when divided.
-    combined_recs['score'] = combined_recs['similar'] / combined_recs['all']
+    combined_recs['score'] = 2*combined_recs['similar'] + combined_recs['all']
     # Sort the data frame by score
     combined_recs = combined_recs.sort_values('score', ascending=False)
     # Merge scores and the movies data frames on movieId column, filter 3 columns and the first 10 rows.
-    return combined_recs.merge(movies_data, left_index=True, right_on='movieId').head(10)[['title', 'genres', 'score']]
+    results =combined_recs.merge(movies_data,left_index=True,right_on='movieId')[['title','genres','score']]
+
+    genr = results.genres.iloc[0].split('|')
+
+    frame = results.genres.apply(lambda x: 1 if len([k for k in genr if k in x.split('|')])> 0 else 0)
+    idx = frame[frame == 1].index
+    return results[results.index.isin(idx)].head(20)
 
 
 with features:
@@ -115,7 +122,6 @@ with features:
     rec = recommendation(df1.iloc[0]['movieId'])
     st.dataframe(rec)  # Same as st.write(df)
 
-#
 # @st.cache
 # def convert_df(df):
 #     # IMPORTANT: Cache the conversion to prevent computation on every rerun
