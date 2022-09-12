@@ -38,7 +38,6 @@ paths = extractation(path)
 @st.cache(allow_output_mutation=True)
 def load1(x):
     movies_data = pd.read_parquet(x)
-    movies_data = movies_data[~movies_data.genres.str.contains('\(')]
     return movies_data
 
 # print(load1(et['data_0']))
@@ -46,6 +45,7 @@ def load1(x):
 
 # movies_data = pd.read_parquet(et['data_0'])
 movies_data = load1(paths['data_0'])
+# movies_data = movies_data[~movies_data.genres.str.contains(r'\(')]
 
 def clean_title(x):  # Create a function
     return re.sub('[^\w ]', '', x)  # This code removes anything except numbers,letters and blanks
@@ -77,49 +77,44 @@ ratings = load(paths['data_1'])
 
 @st.cache
 def recommendation(movie_id):
-    # Get userIds of people who liked the movie registered with
-    # the specified movie id. We can assume those users
-    # are similar users. I will refer this group as similar users to make things clear.
-    similar_users = ratings[(ratings.movieId == movie_id) & (ratings.rating > 4)]['userId'].unique()
-    # Collect the Ids of the other movies that
-    # similar people liked. Assume that similar people generally like similar movies.
-    recs = ratings[(ratings.userId.isin(similar_users) == True) & (ratings.rating > 4)]['movieId']
-    # Calculate which movie is liked how many times by similar
-    # users and divide it to the total number of the group. It shows us the percentage of people who like the movie
+    ## Get userIds of people who liked the movie registered with the specified movie id. We can assume those users are similar users. I will refer this group as similar users to make things clear.
+    similar_users = ratings[(ratings.movieId==movie_id) & (ratings.rating>4)]['userId'].unique()
+    ## Collect the Ids of the other movies that similar people liked. Assume that similar people generally like similar movies.
+    recs = ratings[(ratings.userId.isin(similar_users)==True) & (ratings.rating>4)]['movieId']
+    ## Calculate which movie is liked how many times by similar users and divide it to the total number of the group. It shows us the percentage of people who like the movie
     recs = recs.value_counts() / len(similar_users)
-    # Filter the movies that are liked by at least %10 of the group.
+    ## Filter the movies that are liked by at least %10 of the group.
     recs = recs[recs > 0.1]
-    # The data that show all users who liked the movies that the at least % 10 of the similar users also liked.
-    all_ = ratings[(ratings.movieId.isin(recs.index) == True) & (ratings.rating > 4)]
-    # Calculate the ratio of the total population who liked the movies that the similar users liked.
-    all_recs = all_['movieId'].value_counts() / len(all_['userId'].unique())
-    # Concatenate the ratio tables to see the comparison
-    combined_recs = pd.concat([recs, all_recs], axis=1)
-    # Rename columns
-    combined_recs.columns = ['similar', 'all']
-    # To calculate the score we use the percentages.
-    # If a movie is liked by similar people
-    # but not popular among the total population, it is assumed to be a better recommendation,
-    # because recommendation, in its nature,
-    # is valuable when the asker do not know about the movie. So we take the raio between the score
-    # among the similar people and the total population; the score is amplified when divided.
+    ## The data that show all users who liked the movies that the at least % 10 of the similar users also liked.
+    all_=ratings[(ratings.movieId.isin(recs.index)==True) & (ratings.rating>4)]
+    ## Calculate the ratio of the total population who liked the movies that the similar users liked.
+    all_recs=all_['movieId'].value_counts()/len(all_['userId'].unique())
+    ## Concatenate the ratio tables to see the comparison
+    combined_recs = pd.concat([recs,all_recs],axis=1)
+    ## Rename columns
+    combined_recs.columns = ['similar','all']
+    ## To calculate the score we use the percentages. If a movie is liked by similar people but not popular among the total population, it is assumed to be a better recommendation, because recommendation, in its nature, is valuable when the asker do not know about the movie. So we take the raio between the score among the similar people and the total population; the score is amplified when divided.
     combined_recs['score'] = 2*combined_recs['similar'] + combined_recs['all']
-    # Sort the data frame by score
-    combined_recs = combined_recs.sort_values('score', ascending=False)
-    # Merge scores and the movies data frames on movieId column, filter 3 columns and the first 10 rows.
-    results =combined_recs.merge(movies_data,left_index=True,right_on='movieId')[['title','genres','score']]
+    ## Sort the data frame by score
+    combined_recs=combined_recs.sort_values('score',ascending=False)
+    ## Merge scores and the movies data frames on movieId column, filter 3 columns and the first 10 rows.
+
+    results = combined_recs.merge(movies_data,left_index=True,right_on='movieId')[['title','genres','score']]
 
     genr = results.genres.iloc[0].split('|')
 
-    frame = results.genres.apply(lambda x: 1 if len([k for k in genr if k in x.split('|')])> 0 else 0)
-    idx = frame[frame == 1].index
+    frame = results.genres.apply(lambda x: 1 if len([k for k in genr if k in x.split('|')])>0 else 0)
+
+    idx = frame[frame==1].index
+
     return results[results.index.isin(idx)].head(20)
 
 
 with features:
-    title = st.text_input('You want to watch a similar movie to :', '')
-    df1 = search(title)
-    rec = recommendation(df1.iloc[0]['movieId'])
+    title = st.text_input('You want to watch a similar movie to :', 'Hulk')
+    results = search(title)
+    movie_id = results.iloc[0]['movieId']
+    rec = recommendation(movie_id)
     st.dataframe(rec)  # Same as st.write(df)
 
 # @st.cache

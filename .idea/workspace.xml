@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="749605a0-406e-419a-ac64-9305aadd6aa3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Movie_Recommend.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Movie_Recommend.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Movie Recommendation.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Movie Recommendation.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Movie_recom.py" beforeDir="false" afterPath="$PROJECT_DIR$/Movie_recom.py" afterDir="false" />
     </list>
@@ -39,9 +39,9 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Users\yusuf\pyver\py3104\python.exe" />
+      <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
+      <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Movie_recom.py" />
