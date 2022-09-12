@@ -32,7 +32,7 @@ The algorithm is deployed on streamlit API.
 
 [You can access it here](https://yusufgulcan-movie-recommend-movie-recom-a2r5id.streamlitapp.com/)
 
-## Further Improvement
+## Further Improvements
 The data size could be increased to be able to select recommendations from a wider pool. 
 The rating sensitivity could also be increased for more precise recommendations. 
 
